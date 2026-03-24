@@ -116,6 +116,9 @@ class Logger: ObservableObject {
             DispatchQueue.main.async {
                 self.logs.append(contentsOf: lines)
             }
+            for line in lines {
+                emitToConsole(line)
+            }
         }
     }
 

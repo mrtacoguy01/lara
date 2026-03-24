@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8F5C1F9A2D6A4E9D9F4B1A21 /* darksword.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F5C1F9B2D6A4E9D9F4B1A21 /* darksword.m */; };
+		8F5C1F9A2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */; };
+		8F5C1FA22D6A4E9D9F4B1A21 /* lara/kexploit/kfs.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F5C1FA32D6A4E9D9F4B1A21 /* lara/kexploit/kfs.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		8F5C1F9B2D6A4E9D9F4B1A21 /* darksword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = lara/kexploit/darksword.m; sourceTree = "<group>"; };
+		8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = lara/kexploit/darksword.m; sourceTree = "<group>"; };
+		8F5C1FA32D6A4E9D9F4B1A21 /* lara/kexploit/kfs.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = lara/kexploit/kfs.m; sourceTree = "<group>"; };
 		CC1C8B392F71DF9C00206982 /* lara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lara.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -39,6 +41,7 @@
 			children = (
 				CC1C8B3B2F71DF9C00206982 /* lara */,
 				CC1C8B3A2F71DF9C00206982 /* Products */,
+				CC1C8B822F72C8E000206982 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -48,6 +51,15 @@
 				CC1C8B392F71DF9C00206982 /* lara.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CC1C8B822F72C8E000206982 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */,
+				8F5C1FA32D6A4E9D9F4B1A21 /* lara/kexploit/kfs.m */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -124,7 +136,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F5C1F9A2D6A4E9D9F4B1A21 /* darksword.m in Sources */,
+				8F5C1F9A2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m in Sources */,
+				8F5C1FA22D6A4E9D9F4B1A21 /* lara/kexploit/kfs.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
