@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import Foundation
 import CoreText
 import UIKit
 import UniformTypeIdentifiers
+import Combine
 
 struct importedfont: Identifiable, Codable {
     var id: String { name }
@@ -20,96 +22,41 @@ struct FontPicker: View {
     @ObservedObject var mgr: laramgr
     @State private var showimporter = false
     @State private var customfonts: [importedfont] = load()
-
-    private func applyfont(_ resource: String, label: String) {
-        let success = mgr.vfsoverwrite(target: laramgr.fontpath, withBundledFont: resource)
-        success ? mgr.logmsg("font changed to \(label)") : mgr.logmsg("failed to change font")
-    }
+    @StateObject private var repostore = fontrepostore()
+    @State private var showrepomgr = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Button {
-                        applyfont("SFUI", label: "SFUI")
-                    } label: {
-                        Text("SFUI (Normal Font)")
-                            .font(viewfont(resource: "SFUI", size: 17))
+                    if repostore.repos.isEmpty {
+                        Text("No repos added yet.")
+                            .foregroundColor(.secondary)
                     }
-                    
-                    Button {
-                        applyfont("Comic Sans MS", label: "Comic Sans MS")
-                    } label: {
-                        Text("Comic Sans MS")
-                            .font(viewfont(resource: "Comic Sans MS", size: 17))
-                    }
+                }
 
-                    Button {
-                        applyfont("Chococooky", label: "Chococooky")
-                    } label: {
-                        Text("Chococooky")
-                            .font(viewfont(resource: "Chococooky", size: 17))
+                ForEach(repostore.repos) { repo in
+                    Section {
+                        if let repodata = repo.data {
+                            ForEach(repodata.fonts) { font in
+                                repofontrow(mgr: mgr, repo: repodata, font: font, repostore: repostore)
+                            }
+                        } else {
+                            HStack {
+                                Text("Loading...")
+                                Spacer()
+                                if repo.isloading {
+                                    ProgressView()
+                                } else if let error = repo.error {
+                                    Text(error)
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                }
+                            }
+                        }
+                    } header: {
+                        Text(repo.data?.name ?? repo.url)
                     }
-
-                    Button {
-                        applyfont("DejaVuSansMono", label: "DejaVuSansMono")
-                    } label: {
-                        Text("DejaVu Sans Mono")
-                            .font(viewfont(resource: "DejaVuSansMono", size: 17))
-                    }
-
-                    Button {
-                        applyfont("DejaVuSansCondensed", label: "DejaVuSansCondensed")
-                    } label: {
-                        Text("DejaVu Sans Condensed")
-                            .font(viewfont(resource: "DejaVuSansCondensed", size: 17))
-                    }
-
-                    Button {
-                        applyfont("DejaVuSerif", label: "DejaVuSerif")
-                    } label: {
-                        Text("DejaVu Serif")
-                            .font(viewfont(resource: "DejaVuSerif", size: 17))
-                    }
-
-                    Button {
-                        applyfont("FiraSans-Regular", label: "FiraSans")
-                    } label: {
-                        Text("Fira Sans")
-                            .font(viewfont(resource: "FiraSans-Regular", size: 17))
-                    }
-
-                    Button {
-                        applyfont("Go-Mono", label: "Go-Mono")
-                    } label: {
-                        Text("Go Mono")
-                            .font(viewfont(resource: "Go-Mono", size: 17))
-                    }
-
-                    Button {
-                        applyfont("Go-Regular", label: "Go-Regular")
-                    } label: {
-                        Text("Go Regular")
-                            .font(viewfont(resource: "Go-Regular", size: 17))
-                    }
-
-                    Button {
-                        applyfont("segoeui", label: "Segoe UI")
-                    } label: {
-                        Text("Segoe UI")
-                            .font(viewfont(resource: "segoeui", size: 17))
-                    }
-                    
-                    Button {
-                        applyfont("QuickSand", label: "QuickSand")
-                    } label: {
-                        Text("QuickSand")
-                            .font(viewfont(resource: "QuickSand", size: 17))
-                    }
-                } header: {
-                    Text("Fonts")
-                } footer: {
-                    Text("Fira Sans currently broken. If you want to fix it, create a pull request or something.")
                 }
                 
                 Section {
@@ -152,29 +99,40 @@ struct FontPicker: View {
                 }
             }
             .navigationTitle("Font Overwrite")
+            .task {
+                await repostore.refreshrepos()
+            }
             .fileImporter(
                 isPresented: $showimporter,
                 allowedContentTypes: [.font],
                 allowsMultipleSelection: false
             ) { result in
-                if case .success(let urls) = result, let url = urls.first {
-                    importfont(url)
+                if case .success(let urls) = result, let importurl = urls.first {
+                    importfont(importurl)
                 }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showrepomgr = true
+                    } label: {
+                        Image(systemName: "shippingbox")
+                    }
+                }
+            }
+            .sheet(isPresented: $showrepomgr) {
+                FontRepoView(repostore: repostore)
             }
         }
     }
     
     func importfont(_ url: URL) {
         let fm = FileManager.default
-        
         guard url.startAccessingSecurityScopedResource() else { return }
         defer { url.stopAccessingSecurityScopedResource() }
-
         let dir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Custom")
-
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-
         let dest = dir.appendingPathComponent(url.lastPathComponent)
 
         do {
@@ -194,27 +152,14 @@ struct FontPicker: View {
             print("font import failed:", error)
         }
     }
-}
 
-private func viewfont(resource: String, size: CGFloat) -> Font {
-    if let url = Bundle.main.url(forResource: resource, withExtension: "ttf", subdirectory: "fonts")
-        ?? Bundle.main.url(forResource: resource, withExtension: "ttf", subdirectory: "Fonts")
-        ?? Bundle.main.url(forResource: resource, withExtension: "ttf") {
-        if let data = try? Data(contentsOf: url) as CFData,
-           let provider = CGDataProvider(data: data),
-           let cgFont = CGFont(provider) {
-            let ctFont = CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
-            let uiFont = ctFont as UIFont
-            return Font(uiFont)
-        }
-    }
-    return .system(size: size)
+    
 }
 
 private func viewfontfile(path: String, size: CGFloat) -> Font {
-    let url = URL(fileURLWithPath: path)
+    let fileurl = URL(fileURLWithPath: path)
 
-    if let data = try? Data(contentsOf: url) as CFData,
+    if let data = try? Data(contentsOf: fileurl) as CFData,
        let provider = CGDataProvider(data: data),
        let cgFont = CGFont(provider) {
 
@@ -227,10 +172,12 @@ private func viewfontfile(path: String, size: CGFloat) -> Font {
 }
 
 private let fontkey = "customfonts"
+private let fontrepokey = "fontrepos"
+private let defaultrepo = "https://raw.githubusercontent.com/rooootdev/larafonts/main/fonts.json"
 
 private func load() -> [importedfont] {
-    guard let data = UserDefaults.standard.data(forKey: fontkey),
-          let fonts = try? JSONDecoder().decode([importedfont].self, from: data)
+    guard let storeddata = UserDefaults.standard.data(forKey: fontkey),
+          let fonts = try? JSONDecoder().decode([importedfont].self, from: storeddata)
     else { return [] }
     let fm = FileManager.default
     let filtered = fonts.filter { fm.fileExists(atPath: $0.path) }
@@ -241,7 +188,336 @@ private func load() -> [importedfont] {
 }
 
 private func save(_ fonts: [importedfont]) {
-    if let data = try? JSONEncoder().encode(fonts) {
-        UserDefaults.standard.set(data, forKey: fontkey)
+    if let encoded = try? JSONEncoder().encode(fonts) {
+        UserDefaults.standard.set(encoded, forKey: fontkey)
+    }
+}
+
+private func loadrepourls() -> [String] {
+    if let storeddata = UserDefaults.standard.data(forKey: fontrepokey),
+       let urls = try? JSONDecoder().decode([String].self, from: storeddata),
+       !urls.isEmpty {
+        return urls
+    }
+    return [defaultrepo]
+}
+
+private func saverepourls(_ urls: [String]) {
+    if let encoded = try? JSONEncoder().encode(urls) {
+        UserDefaults.standard.set(encoded, forKey: fontrepokey)
+    }
+}
+
+private func isdefaultrepo(_ url: String) -> Bool {
+    url == defaultrepo
+}
+
+struct fontrepostate: Identifiable {
+    let id: String
+    let url: String
+    var isloading: Bool
+    var error: String?
+    var data: fontrepodata?
+
+    init(url: String, isloading: Bool, error: String?, data: fontrepodata?) {
+        self.id = url
+        self.url = url
+        self.isloading = isloading
+        self.error = error
+        self.data = data
+    }
+}
+
+struct fontrepodata: Decodable, Identifiable {
+    var id: String { name }
+    let name: String
+    let author: String
+    let icon: String?
+    let fonts: [fontrepofont]
+
+    enum CodingKeys: String, CodingKey {
+        case name = "repo_name"
+        case author = "repo_author"
+        case icon = "repo_icon"
+        case fonts
+    }
+}
+
+struct fontrepofont: Decodable, Identifiable {
+    var id: String { url }
+    let name: String
+    let url: String
+    let format: String?
+}
+
+struct repofontrow: View {
+    @ObservedObject var mgr: laramgr
+    let repo: fontrepodata
+    let font: fontrepofont
+    @ObservedObject var repostore: fontrepostore
+
+    var body: some View {
+        let localurl = localfonturl(repo: repo, font: font)
+        let iddownloaded = localurl.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+
+        Button {
+            if iddownloaded, let localurl {
+                let success = mgr.vfsoverwritefromlocalpath(
+                    target: laramgr.fontpath,
+                    source: localurl.path
+                )
+                success ? mgr.logmsg("font changed to \(font.name)") : mgr.logmsg("failed to change font")
+            } else {
+                Task {
+                    await repostore.dlfont(font, repo: repo)
+                }
+            }
+        } label: {
+            HStack {
+                Text(font.name)
+                    .font(iddownloaded && localurl != nil
+                        ? viewfontfile(path: localurl!.path, size: 17)
+                        : .system(size: 17))
+                Spacer()
+                if repostore.downloading.contains(font.url) {
+                    ProgressView()
+                }
+            }
+        }
+    }
+}
+
+struct FontRepoView: View {
+    @ObservedObject var repostore: fontrepostore
+    @State private var showaddrepo = false
+    @State private var newrepourl = ""
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(repostore.repos) { repo in
+                        HStack {
+                            if let iconurl = repo.data?.icon, let iconimgurl = URL(string: iconurl) {
+                                AsyncImage(url: iconimgurl) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
+                            } else {
+                                ProgressView()
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(repo.data?.name ?? repo.url)
+                                    .font(.headline)
+                                if let author = repo.data?.author, !author.isEmpty {
+                                    Text(author)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            Spacer()
+                            if repo.isloading {
+                                ProgressView()
+                            } else if let error = repo.error {
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            } else if !isdefaultrepo(repo.url) {
+                                Button(role: .destructive) {
+                                    repostore.removerepo(repo.url)
+                                } label: {
+                                    Image(systemName: "trash")
+                                }
+                            }
+                        }
+                        .swipeActions {
+                            if !isdefaultrepo(repo.url) {
+                                Button(role: .destructive) {
+                                    repostore.removerepo(repo.url)
+                                } label: {
+                                    Text("Remove")
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Repos")
+                } footer: {
+                    Text("Make a repo by forking the [template repo](https://github.com/rooootdev/larafonts/) on GitHub and adding your custom fonts there.")
+                }
+            }
+            .navigationTitle("Font Repos")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        newrepourl = ""
+                        showaddrepo = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        Task { await repostore.refreshrepos() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+            }
+            .alert("Add Font Repo", isPresented: $showaddrepo) {
+                TextField("URL:", text: $newrepourl)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.URL)
+                    .autocorrectionDisabled()
+                Button("Add") {
+                    Task { await repostore.addrepo(newrepourl) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Example: \n\(defaultrepo)")
+            }
+        }
+    }
+}
+
+private func localfonturl(repo: fontrepodata, font: fontrepofont) -> URL? {
+    guard let remoteurl = URL(string: font.url) else { return nil }
+    let fm = FileManager.default
+    let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let repoDir = docs.appendingPathComponent("FontRepos")
+        .appendingPathComponent(sanitizefilename(repo.name))
+    return repoDir.appendingPathComponent(remoteurl.lastPathComponent)
+}
+
+private func sanitizefilename(_ name: String) -> String {
+    let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "._-"))
+    let cleaned = name.unicodeScalars.map { allowed.contains($0) ? Character($0) : "_" }
+    return String(cleaned)
+}
+
+final class fontrepostore: ObservableObject {
+    @Published var repos: [fontrepostate] = []
+    @Published var downloading: Set<String> = []
+
+    private var repourls: [String] = loadrepourls()
+    private var pendingdownload: Set<String> = []
+
+    @MainActor
+    func refreshrepos() async {
+        let urls = repourls
+        repos = urls.map { fontrepostate(url: $0, isloading: true, error: nil, data: nil) }
+
+        await withTaskGroup(of: (String, Result<fontrepodata, Error>).self) { group in
+            for url in urls {
+                group.addTask {
+                    do {
+                        let repodata = try await self.fetchrepo(url)
+                        return (url, .success(repodata))
+                    } catch {
+                        return (url, .failure(error))
+                    }
+                }
+            }
+
+            for await (url, result) in group {
+                if let idx = repos.firstIndex(where: { $0.url == url }) {
+                    repos[idx].isloading = false
+                    switch result {
+                    case .success(let repodata):
+                        repos[idx].data = repodata
+                        repos[idx].error = nil
+                        let repo = repodata
+                        Task {
+                            await self.ensurerepofontsdownloaded(repo)
+                            await MainActor.run {
+                                self.pendingdownload.remove(url)
+                            }
+                        }
+                    case .failure(let error):
+                        repos[idx].data = nil
+                        repos[idx].error = error.localizedDescription
+                    }
+                }
+            }
+        }
+    }
+
+    func addrepo(_ urlString: String) async {
+        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, URL(string: trimmed) != nil else { return }
+        guard !repourls.contains(trimmed) else { return }
+        repourls.append(trimmed)
+        saverepourls(repourls)
+        pendingdownload.insert(trimmed)
+        await refreshrepos()
+    }
+
+    func removerepo(_ url: String) {
+        repourls.removeAll { $0 == url }
+        if repourls.isEmpty {
+            repourls = [defaultrepo]
+        }
+        saverepourls(repourls)
+        Task { @MainActor in
+            await refreshrepos()
+        }
+    }
+
+    func dlallfonts(for repoURL: String, repo: fontrepodata? = nil) async {
+        let repoData = repo ?? repos.first(where: { $0.url == repoURL })?.data
+        guard let repoData else { return }
+        for font in repoData.fonts {
+            await dlfont(font, repo: repoData)
+        }
+    }
+
+    func ensurerepofontsdownloaded(_ repo: fontrepodata) async {
+        for font in repo.fonts {
+            guard let localurl = localfonturl(repo: repo, font: font) else { continue }
+            if FileManager.default.fileExists(atPath: localurl.path) {
+                continue
+            }
+            await dlfont(font, repo: repo)
+        }
+    }
+
+    func dlfont(_ font: fontrepofont, repo: fontrepodata) async {
+        await MainActor.run { downloading.insert(font.url) }
+        defer { Task { @MainActor in downloading.remove(font.url) } }
+
+        guard let remoteurl = URL(string: font.url) else { return }
+        guard let localurl = localfonturl(repo: repo, font: font) else { return }
+        if FileManager.default.fileExists(atPath: localurl.path) { return }
+
+        do {
+            let (tempurl, _) = try await URLSession.shared.download(from: remoteurl)
+            let fm = FileManager.default
+            try fm.createDirectory(at: localurl.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if fm.fileExists(atPath: localurl.path) {
+                try fm.removeItem(at: localurl)
+            }
+            try fm.moveItem(at: tempurl, to: localurl)
+        } catch {
+            await MainActor.run {
+                if let idx = repos.firstIndex(where: { $0.data?.name == repo.name }) {
+                    repos[idx].error = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func fetchrepo(_ urlString: String) async throws -> fontrepodata {
+        guard let repourl = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+        let (repodata, _) = try await URLSession.shared.data(from: repourl)
+        return try JSONDecoder().decode(fontrepodata.self, from: repodata)
     }
 }

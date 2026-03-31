@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D9DB0FAD2F8437FB746E95B /* lara/fonts in Resources */ = {isa = PBXBuildFile; fileRef = 73DC188A88C046E980B4B724 /* lara/fonts */; };
 		9F4A1D2D3C4E567890123456 /* lara/lib/libxpf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */; };
 		9F4A1D2F3C4E567890123456 /* lara/lib/libxpf.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9F4A1D403C4E567890123456 /* lara/lib/libgrabkernel2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */; };
@@ -31,7 +30,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		73DC188A88C046E980B4B724 /* lara/fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = lara/fonts; sourceTree = "<group>"; };
 		8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = lara/kexploit/darksword.m; sourceTree = "<group>"; };
 		9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = lara/lib/libxpf.dylib; sourceTree = "<group>"; };
 		9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = lara/lib/libgrabkernel2.dylib; sourceTree = "<group>"; };
@@ -96,7 +94,6 @@
 				8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */,
 				9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */,
 				9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */,
-				73DC188A88C046E980B4B724 /* lara/fonts */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -170,7 +167,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D9DB0FAD2F8437FB746E95B /* lara/fonts in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,7 +323,6 @@
 				);
 				INFOPLIST_FILE = lara/Info.plist;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_UIAppFonts = "fonts/Chococooky.ttf fonts/Comic Sans SFUI.ttf fonts/DejaVuSansCondensed.ttf fonts/DejaVuSansMono.ttf fonts/DejaVuSerif.ttf fonts/FiraSans-Regular.ttf fonts/Go-Mono.ttf fonts/Go-Regular.ttf fonts/SFUI.ttf fonts/segoeui.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
@@ -342,6 +337,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/lib",
+					"$(PROJECT_DIR)/lara/lib",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.roooot.lara;
@@ -374,7 +370,6 @@
 				);
 				INFOPLIST_FILE = lara/Info.plist;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_UIAppFonts = "fonts/Chococooky.ttf fonts/Comic Sans SFUI.ttf fonts/DejaVuSansCondensed.ttf fonts/DejaVuSansMono.ttf fonts/DejaVuSerif.ttf fonts/FiraSans-Regular.ttf fonts/Go-Mono.ttf fonts/Go-Regular.ttf fonts/SFUI.ttf fonts/segoeui.ttf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
@@ -389,6 +384,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/lib",
+					"$(PROJECT_DIR)/lara/lib",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.roooot.lara;

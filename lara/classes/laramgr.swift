@@ -220,20 +220,6 @@ final class laramgr: ObservableObject {
         return vfs_filesize(path)
     }
 
-    func vfsoverwrite(target: String, withBundledFont fontName: String) -> Bool {
-        guard vfsready else { return false }
-        let fontURL: URL? =
-            Bundle.main.url(forResource: fontName, withExtension: "ttf", subdirectory: "Fonts")
-            ?? Bundle.main.url(forResource: fontName, withExtension: "ttf")
-        guard let fontURL else {
-            self.logmsg("(vfs) font '\(fontName).ttf' not found in bundle")
-            return false
-        }
-        self.logmsg("(vfs) using font: \(fontURL.path)")
-        let r = vfs_overwritefile(target, fontURL.path)
-        return r == 0
-    }
-
     func vfsoverwritefromlocalpath(target: String, source: String) -> Bool {
         print("(vfs) target \(source) -> \(target)")
 
