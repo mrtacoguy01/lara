@@ -2,5 +2,3 @@ Resources/*
 xcuserdata/
 *.xcuserstate
 .DS_Store
-/dist
-/build
