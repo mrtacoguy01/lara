@@ -368,7 +368,7 @@ struct ContentView: View {
                     Section {
                         Button("Init RemoteCall") {
                             mgr.logmsg("T")
-                            mgr.rcinit(process: "springboard", migbypass: false) { success in
+                            mgr.rcinit(process: "SpringBoard", migbypass: false) { success in
                                 if success {
                                     mgr.logmsg("rc init succeeded!")
                                     let pid = mgr.rccall(name: "getpid")
