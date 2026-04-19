@@ -9,20 +9,15 @@ import SwiftUI
 
 struct RemoteView: View {
     @ObservedObject var mgr: laramgr
-    @State private var isRunning: Bool = false
-    @State private var dockColumns: Int = 5
-    @AppStorage("rcDockUnlimited") private var rcDockUnlimited: Bool = false
+    @State private var running: Bool = false
+    @State private var columns: Int = 5
+    @AppStorage("rcdockunlimited") private var rcdockunlimited: Bool = false
 
-    private var dockMaxColumns: Int { rcDockUnlimited ? 50 : 10 }
+    private var dockMaxColumns: Int { rcdockunlimited ? 50 : 10 }
 
     var body: some View {
         List {
             Section {
-                if !mgr.remotecallrunning {
-                    Text("RemoteCall is not initialized.")
-                        .foregroundColor(.secondary)
-                }
-
                 Button {
                     run("Status Bar Time Format") {
                         status_bar_tweak(mgr.sbProc)
@@ -31,7 +26,6 @@ struct RemoteView: View {
                 } label: {
                     Text("Status Bar Time Format")
                 }
-                .disabled(!mgr.remotecallrunning || isRunning)
 
                 Button {
                     run("Hide Icon Labels") {
@@ -41,33 +35,30 @@ struct RemoteView: View {
                 } label: {
                     Text("Hide Icon Labels")
                 }
-                .disabled(!mgr.remotecallrunning || isRunning)
 
-                Stepper(value: $dockColumns, in: 1...dockMaxColumns) {
+                Stepper(value: $columns, in: 1...dockMaxColumns) {
                     HStack {
                         Text("Dock columns")
                         Spacer()
-                        Text("\(dockColumns)")
+                        Text("\(columns)")
                             .foregroundColor(.secondary)
                             .monospacedDigit()
                     }
                 }
-                .disabled(!mgr.remotecallrunning || isRunning)
-                .onChange(of: rcDockUnlimited) { _ in
-                    if !rcDockUnlimited, dockColumns > 10 {
-                        dockColumns = 10
+                .onChange(of: rcdockunlimited) { _ in
+                    if !rcdockunlimited, columns > 10 {
+                        columns = 10
                     }
                 }
 
                 Button {
-                    run("Apply Dock Columns=\(dockColumns)") {
-                        let result = set_dock_icon_count(mgr.sbProc, Int32(dockColumns))
-                        return "set_dock_icon_count(\(dockColumns)) -> \(result)"
+                    run("Apply Dock Columns=\(columns)") {
+                        let result = set_dock_icon_count(mgr.sbProc, Int32(columns))
+                        return "set_dock_icon_count(\(columns)) -> \(result)"
                     }
                 } label: {
                     Text("Apply Dock Columns")
                 }
-                .disabled(!mgr.remotecallrunning || isRunning)
 
                 Button {
                     run("Enable Upside Down") {
@@ -77,26 +68,30 @@ struct RemoteView: View {
                 } label: {
                     Text("Enable Upside Down")
                 }
-                .disabled(!mgr.remotecallrunning || isRunning)
             } header: {
                 Text("SpringBoard")
             } footer: {
                 Text("These call into SpringBoard via RemoteCall. Keep RemoteCall initialized while running them.")
+                
+                if !mgr.rcready {
+                    Text("RemoteCall is not initialized. How are you here?")
+                }
             }
+            .disabled(!mgr.rcready || running)
         }
         .navigationTitle(Text("Tweaks"))
     }
 
     private func run(_ name: String, _ work: @escaping () -> String) {
-        guard mgr.remotecallrunning, !isRunning else { return }
-        isRunning = true
+        guard mgr.rcready, !running else { return }
+        running = true
         mgr.logmsg("(rc) \(name)...")
 
         DispatchQueue.global(qos: .userInitiated).async {
             let result = work()
             DispatchQueue.main.async {
                 self.mgr.logmsg("(rc) \(result)")
-                self.isRunning = false
+                self.running = false
             }
         }
     }

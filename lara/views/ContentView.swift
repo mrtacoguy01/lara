@@ -368,7 +368,7 @@ struct ContentView: View {
 
                     #if !DISABLE_REMOTECALL
                     Section {
-                        Button("Init RemoteCall") {
+                        Button {
                             mgr.logmsg("T")
                             mgr.rcinit(process: "SpringBoard", migbypass: false) { success in
                                 if success {
@@ -379,10 +379,23 @@ struct ContentView: View {
                                     mgr.logmsg("rc init failed")
                                 }
                             }
+                        } label: {
+                            if mgr.rcrunning {
+                                Text("Initialising RemoteCall...")
+                            } else if !mgr.rcready {
+                                Text("Initialise RemoteCall")
+                            } else {
+                                HStack {
+                                    Text("Initialised RemoteCall")
+                                    Spacer()
+                                    Image(systemName: "checkmark.circle")
+                                        .foregroundColor(.green)
+                                }
+                            }
                         }
-                        .disabled(!mgr.dsready || mgr.remotecallrunning)
+                        .disabled(!mgr.dsready || mgr.rcready)
 
-                        if mgr.remotecallrunning {
+                        if mgr.rcready {
                             NavigationLink("Tweaks") {
                                 RemoteView(mgr: mgr)
                             }
@@ -399,7 +412,7 @@ struct ContentView: View {
                         }
                         Text("RemoteCall is still in development and may not work properly 100% of the time.")
                     }
-                    .disabled(isdebugged())
+                    .disabled(isdebugged() || mgr.rcrunning)
                     #endif
 
                     Section {

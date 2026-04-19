@@ -20,7 +20,7 @@ struct SettingsView: View {
     @AppStorage("keepalive") private var iskeepalive: Bool = true
     @AppStorage("showfmintabs") private var showfmintabs: Bool = true
     @AppStorage("selectedmethod") private var selectedmethod: method = .hybrid
-    @AppStorage("rcDockUnlimited") private var rcDockUnlimited: Bool = false
+    @AppStorage("rcdockunlimited") private var rcdockunlimited: Bool = false
     
     var appname: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
@@ -110,7 +110,7 @@ struct SettingsView: View {
 
                 #if !DISABLE_REMOTECALL
                 Section {
-                    Toggle("Allow >10 dock icons", isOn: $rcDockUnlimited)
+                    Toggle("Allow >10 dock icons", isOn: $rcdockunlimited)
                 } header: {
                     Text("RemoteCall")
                 } footer: {
