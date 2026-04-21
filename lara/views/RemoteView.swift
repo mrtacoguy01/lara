@@ -185,6 +185,35 @@ struct RemoteView: View {
                         UIApplication.shared.open(url)
                     }
                 }
+                
+                HStack(alignment: .top) {
+                    AsyncImage(url: URL(string: "https://github.com/Scr-eam.png")) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                    
+                    VStack(alignment: .leading) {
+                        Text("Scream")
+                            .font(.headline)
+                        
+                        Text("Fixed Hide Icon Labels")
+                            .font(.subheadline)
+                            .foregroundColor(Color.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                .onTapGesture {
+                    if let url = URL(string: "https://github.com/Scr-eam"),
+                       UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
+                    }
+                }
             } header: {
                 Text("Credits")
             }
