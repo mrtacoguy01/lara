@@ -10,7 +10,11 @@ import Darwin
 
 struct RemoteView: View {
     @ObservedObject var mgr: laramgr
+    
     @State private var statusBarTimeFormat: String = "HH:mm"
+    @State private var statusBarTimeFormatLiveUpdateEnabled = false
+    @State private var statusBarTimeFormatLiveUpdateTimer: Timer? = nil
+    
     @State private var running: Bool = false
     @State private var columns: Int = 5
     @State private var performanceHUD: Int = -1
@@ -30,15 +34,18 @@ struct RemoteView: View {
                 TextField("Date format (e.g. HH:mm)", text: $statusBarTimeFormat)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+                
+                Toggle("Update every second", isOn: $statusBarTimeFormatLiveUpdateEnabled)
 
                 Button {
                     run("Status Bar Time Format") {
-                        status_bar_time_format(mgr.sbProc, statusBarTimeFormat)
+                        status_bar_time_format(mgr.sbProc, statusBarTimeFormat, statusBarTimeFormatLiveUpdateEnabled);
                         return "status_bar_time_format() done"
                     }
                 } label: {
                     Text("Apply")
                 }
+                
             } header: {
                 Text("Status Bar Time Format")
             } footer: {
