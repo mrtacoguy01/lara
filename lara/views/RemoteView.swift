@@ -42,7 +42,7 @@ struct RemoteView: View {
             } header: {
                 Text("Status Bar Time Format")
             } footer: {
-                Text("The text automatically updates every MINUTE")
+                Text("The text automatically updates every MINUTE\nFind all time tokens [here](https://gist.github.com/mrtacoguy01/1fb6f5f861c397190d537b2263936629).")
             }
 
             Section {
