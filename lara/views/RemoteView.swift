@@ -282,12 +282,6 @@ struct RemoteView: View {
 
                 Toggle("MIG filter bypass", isOn: $customMigBypass)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Args (comma/space separated; dec, 0xhex, or -1)")
-                        .foregroundColor(.secondary)
-                        .font(.footnote)
-                }
-
                 Button {
                     run("Custom RemoteCall \(customProcessName):\(customFunctionName)") {
                         let process = customProcessName.trimmingCharacters(in: .whitespacesAndNewlines)
